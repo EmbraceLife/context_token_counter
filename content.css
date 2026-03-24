@@ -1,0 +1,122 @@
+/* ═══════════════════════════════════════════════════════════════
+   SolveIt Context Token Counter — Shared Styles
+   
+   WHY EXTRACT CSS? Inline styles in JS create maintenance debt.
+   Centralizing here means one place to tune colors, spacing,
+   and responsive behavior for all four modules.
+   
+   DESIGN DECISION: We use CSS custom properties (variables) for
+   the shared color palette. Each module's JS still sets dynamic
+   values (width, color based on token count) via element.style —
+   only STATIC layout properties live here.
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── Shared bar layout ─────────────────────────────────────── */
+
+/* TOKEN BAR: The main dialog token counter bar.
+   Sits below the tab row. 80ch width = 200K token budget visual scale.
+   flex layout keeps the bar track and label on one line. */
+#token-bar {
+    display: flex;
+    width: 80ch;
+    align-items: center;
+    gap: 0px;
+    padding: 4px 8px;
+    font: 11px/1 monospace;
+    color: #888;
+}
+
+/* The background track that holds the colored fill */
+#token-bar .token-track {
+    flex: 1;
+    height: 8px;
+    background: #eee;
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+/* The colored fill — width and background set dynamically by JS */
+#token-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width .3s, background .3s;
+}
+
+/* The "42K" label — color set dynamically by JS */
+#token-label {
+    min-width: 32px;
+    text-align: right;
+}
+
+/* ── CRAFT bar ─────────────────────────────────────────────── */
+
+/* CRAFT BAR: Segmented bar showing each CRAFT's token contribution.
+   Width is proportional to token-bar (same scale: 80ch = 200K).
+   Each segment's color is set inline by JS. */
+#craft-bar {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 8px;
+    font: 11px/1 monospace;
+    color: #888;
+}
+
+/* The segmented track — width set dynamically based on total CRAFT tokens */
+#craft-bar .craft-track {
+    height: 8px;
+    background: #eee;
+    border-radius: 3px;
+    overflow: hidden;
+    display: flex;
+}
+
+/* Each segment inside the track — width/color set inline by JS */
+#craft-bar .craft-segment {
+    height: 100%;
+    display: inline-block;
+}
+
+/* The "14K craft" label */
+#craft-bar .craft-label {
+    text-align: left;
+    color: #999;
+    font-size: 10px;
+    white-space: nowrap;
+}
+
+/* ── Anchor toggle ─────────────────────────────────────────── */
+
+/* ANCHOR TOGGLE: Button + label row for setting the anchor message.
+   Sits below the CRAFT bar (or token bar if no CRAFTs). */
+#anchor-toggle {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 8px;
+    font: 11px/1 monospace;
+    color: #888;
+    cursor: pointer;
+    user-select: none;
+}
+
+/* The 📌 button — border color toggles green when selecting */
+#anchor-btn {
+    padding: 2px 8px;
+    border: 1px solid #555;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+/* Selection mode active — green glow signals "click a message now" */
+#anchor-btn.selecting {
+    border-color: #6bff6b;
+    color: #6bff6b;
+}
+
+/* The anchor ID label — shows "(all messages)" or the selected msg ID */
+#anchor-id-label {
+    color: #999;
+    font-size: 10px;
+    white-space: nowrap;
+}

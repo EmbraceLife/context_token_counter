@@ -1,0 +1,27 @@
+{
+  "manifest_version": 3,
+  "name": "SolveIt Context Token Counter",
+  "version": "1.0",
+  "description": "Token counting bars, CRAFT token breakdown, and anchor-based filtering for SolveIt dialogs",
+
+  "content_scripts": [
+    {
+      "matches": ["https://*.solve.it.com/*"],
+      "css": ["content.css"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+
+  "web_accessible_resources": [{
+    "resources": [
+      "token-bar.js",
+      "craft-discover.js",
+      "craft-count.js",
+      "craft-bar.js",
+      "anchor-toggle.js",
+      "heartbeat.js"
+    ],
+    "matches": ["https://*.solve.it.com/*"]
+  }]
+}
