@@ -141,6 +141,7 @@
         id: window._anchorMsgId ? window._anchorMsgId() : '',
         run: 'true'
       });
+      log('🎯 injecting before anchor ID:', window._anchorMsgId ? window._anchorMsgId() : 'none');
       const resp = await fetch('/add_relative_', { method: 'POST', body });
       if (resp.ok) log('✅ heartbeat prompt injected');
       else log('❌ inject failed, status:', resp.status);
