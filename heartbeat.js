@@ -34,6 +34,8 @@
   let countdownTimer = null; // setInterval handle for countdown display
   let fireTimer = null;      // setTimeout handle for the 4-min trigger
   let secondsLeft = INTERVAL_MS / 1000;
+  let startedAt = null;     // Date.now() when current cycle started
+  let pausedAt = null;      // Date.now() when pause was clicked
 
   // ── DISPLAY ──────────────────────────────────────────────────
   // INJECT BOXES: Add two bordered boxes into the shared container,
@@ -48,7 +50,7 @@
     }
 
     const boxStyle = 'display:inline-block;border:1px solid #888;border-radius:3px;' +
-                     'padding:1px 5px;font-size:11px;font-family:monospace;' +
+                     'padding:1px 5px;font-size:16px;font-family:monospace;' +
                      'white-space:nowrap;min-width:36px;text-align:center;color:#aaa;';
 
     // LEFT BOX: countdown timer
@@ -65,6 +67,33 @@
 
     container.appendChild(timerBox);
     container.appendChild(idBox);
+
+    const pauseBtn = document.createElement('span');
+    pauseBtn.id = 'heartbeat-pause';
+    pauseBtn.style.cssText = boxStyle + 'cursor:pointer;min-width:24px;';
+    pauseBtn.textContent = '⏸';
+    pauseBtn.onclick = () => {
+        if (!window.__heartbeatPaused) {
+          // PAUSING: freeze both timers, record when we paused
+          pausedAt = Date.now();
+          clearInterval(countdownTimer);
+          clearTimeout(fireTimer);
+          window.__heartbeatPaused = true;
+          pauseBtn.textContent = '▶';
+          log('⏸ paused — secondsLeft:', secondsLeft);
+        } else {
+          // RESUMING: compute remaining time, restart both timers
+          const elapsed = pausedAt - startedAt;
+          const remaining = INTERVAL_MS - elapsed;
+          startedAt = Date.now() - elapsed; // shift so future pauses calc correctly
+          window.__heartbeatPaused = false;
+          countdownTimer = setInterval(window.__tickFn, 1000);
+          fireTimer = setTimeout(onCountdownEnd, remaining);
+          pauseBtn.textContent = '⏸';
+          log('▶ resumed — secondsLeft:', secondsLeft, '| remaining ms:', remaining);
+        }
+    };
+    container.appendChild(pauseBtn);
     log('✅ heartbeat boxes injected');
   }
 
@@ -130,20 +159,25 @@
 
   // INJECT HEARTBEAT: POST a new prompt message via /add_relative_
   // so the AI sees it and responds — same pattern as solveit-voice send.js.
-  async function injectHeartbeat() {
+  async function injectHeartbeat(refId) {
     log('injecting heartbeat prompt');
     try {
+      const placement = refId ? 'add_after' : 'add_before';
+      const id = refId || (window._anchorMsgId ? window._anchorMsgId() : '');
       const body = new URLSearchParams({
         dlg_name: _edVar('dlg_name'),
         content: HEARTBEAT_TEXT,
         msg_type: 'prompt',
-        placement: 'add_before',
-        id: window._anchorMsgId ? window._anchorMsgId() : '',
+        placement: placement,
+        id: id,
         run: 'true'
       });
-      log('🎯 injecting before anchor ID:', window._anchorMsgId ? window._anchorMsgId() : 'none');
+      log('🎯 injecting', placement, 'ID:', id);
       const resp = await fetch('/add_relative_', { method: 'POST', body });
-      if (resp.ok) log('✅ heartbeat prompt injected');
+      if (resp.ok) {
+        const data = await resp.json();
+        log('✅ heartbeat prompt injected — new ID:', data.id || data.msg_id || JSON.stringify(data));
+      }
       else log('❌ inject failed, status:', resp.status);
     } catch (e) {
       log('❌ injectHeartbeat failed:', e.message);
@@ -159,13 +193,17 @@
     clearTimeout(fireTimer);
 
     secondsLeft = INTERVAL_MS / 1000;
+    startedAt = Date.now();  // record when this cycle started
     updateDisplay();
 
     // TICK: Decrement display every second — pure UI, no logic here.
-    countdownTimer = setInterval(() => {
+    // TICK FN: extracted so pause/resume can reference the same logic
+    function tickFn() {
       secondsLeft--;
       updateDisplay();
-    }, 1000);
+    }
+    window.__tickFn = tickFn; // store so pause/resume can reference it
+    countdownTimer = setInterval(tickFn, 1000);
 
     // FIRE: After exactly 4 minutes, check and act.
     fireTimer = setTimeout(onCountdownEnd, INTERVAL_MS);
@@ -181,6 +219,7 @@
     const currentId = await fetchLatestPromptId();
     log('savedId:', savedId, '| currentId:', currentId);
 
+    if (currentId === null) { log('⚠️ fetch failed — skipping cycle, savedId unchanged:', savedId); return; }
     if (currentId !== savedId) {
       // USER WAS ACTIVE: They sent a prompt during the 4 minutes.
       // Update savedId to the new latest prompt, restart cleanly.
@@ -190,7 +229,7 @@
       // USER WAS IDLE: No new prompt in 4 minutes.
       // Inject heartbeat prompt, then update savedId after injection.
       log('⏰ user was idle — injecting heartbeat');
-      await injectHeartbeat();
+      await injectHeartbeat(currentId);
       // Re-fetch after injection so savedId points to the heartbeat prompt
       savedId = await fetchLatestPromptId();
     }

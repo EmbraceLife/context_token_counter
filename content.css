@@ -21,15 +21,15 @@
     width: 80ch;
     align-items: center;
     gap: 0px;
-    padding: 4px 8px;
-    font: 11px/1 monospace;
+    padding: 6px 12px;
+    font: 16px/1 monospace;
     color: #888;
 }
 
 /* The background track that holds the colored fill */
 #token-bar .token-track {
     flex: 1;
-    height: 8px;
+    height: 12px;
     background: #eee;
     border-radius: 3px;
     overflow: hidden;
@@ -57,14 +57,14 @@
     display: flex;
     align-items: center;
     gap: 4px;
-    padding: 4px 8px;
-    font: 11px/1 monospace;
+    padding: 6px 12px;
+    font: 16px/1 monospace;
     color: #888;
 }
 
 /* The segmented track — width set dynamically based on total CRAFT tokens */
 #craft-bar .craft-track {
-    height: 8px;
+    height: 12px;
     background: #eee;
     border-radius: 3px;
     overflow: hidden;
@@ -81,7 +81,7 @@
 #craft-bar .craft-label {
     text-align: left;
     color: #999;
-    font-size: 10px;
+    font-size: 14px;
     white-space: nowrap;
 }
 
@@ -93,8 +93,8 @@
     display: flex;
     align-items: center;
     gap: 6px;
-    padding: 4px 8px;
-    font: 11px/1 monospace;
+    padding: 6px 12px;
+    font: 16px/1 monospace;
     color: #888;
     cursor: pointer;
     user-select: none;
@@ -117,6 +117,17 @@
 /* The anchor ID label — shows "(all messages)" or the selected msg ID */
 #anchor-id-label {
     color: #999;
-    font-size: 10px;
+    font-size: 14px;
     white-space: nowrap;
+}
+
+/* Container background — light mode */
+#token-counter-container {
+    background: #f0f0f0;
+    border-radius: 4px;
+}
+
+/* Container background — dark mode */
+@media (prefers-color-scheme: dark) {
+    #token-counter-container { background: #2a2a2a; }
 }
